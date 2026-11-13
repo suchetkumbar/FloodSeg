@@ -13,6 +13,8 @@ Pooled water IoU (%), mean ± s.d. over seeds:
 | Fusion | 82.7 ± 1.2 | 35.7 ± 4.5 | 20.1 ± 5.4 | 13.5 ± 5.1 | 10.3 ± 4.9 |
 | Optical + cloud-mask fill | 82.5 ± 0.3 | 61.0 ± 0.7 | 40.6 ± 0.8 | 20.7 ± 0.8 | 0.0 ± 0.0 |
 | Fusion + cloud-mask fill | 82.7 ± 1.2 | 62.2 ± 1.5 | 41.8 ± 1.7 | 22.5 ± 3.1 | 1.6 ± 2.7 |
+| Optical, cloud-aug trained | 80.7 ± 2.2 | 74.4 ± 2.7 | 66.0 ± 4.0 | 55.3 ± 7.0 | 0.0 ± 0.0 |
+| Fusion, cloud-aug trained | 82.1 ± 2.8 | 78.1 ± 3.6 | 73.0 ± 6.2 | 67.9 ± 8.4 | 54.2 ± 12.3 |
 
 Paired differences (seed-summed per-chip counts, 5,000 chip bootstrap resamples), in pp:
 
@@ -22,6 +24,9 @@ Paired differences (seed-summed per-chip counts, 5,000 chip bootstrap resamples)
 | Fusion − SAR (S1) | +15.4 [+10.2, +22.2] | -31.6 [-39.9, -22.8] | -47.5 [-55.5, -38.0] | -54.2 [-62.2, -44.4] | -57.4 [-65.5, -47.2] |
 | Optical (S2) − SAR (S1) | +15.2 [+9.8, +22.2] | -25.5 [-33.7, -17.3] | -42.5 [-50.3, -33.5] | -51.6 [-59.6, -42.2] | -56.8 [-64.9, -47.1] |
 | Fusion + cloud-mask fill − Optical + cloud-mask fill | +0.2 [-1.3, +1.7] | +1.2 [+0.2, +2.3] | +1.2 [+0.2, +2.2] | +1.8 [+0.6, +3.1] | +1.6 [+0.6, +2.9] |
+| Fusion, cloud-aug trained − Optical, cloud-aug trained | +1.3 [+0.1, +3.1] | +3.7 [+2.1, +5.6] | +7.1 [+4.0, +10.5] | +12.6 [+8.0, +17.7] | +54.6 [+43.0, +63.4] |
+| Fusion, cloud-aug trained − SAR (S1) | +14.7 [+9.1, +21.8] | +10.8 [+5.2, +17.2] | +5.8 [+0.3, +11.8] | +0.7 [-4.9, +6.2] | -12.7 [-19.1, -6.9] |
+| Fusion, cloud-aug trained − Fusion | -0.6 [-2.3, +1.0] | +42.4 [+36.6, +48.5] | +53.3 [+47.1, +58.6] | +54.9 [+47.4, +60.9] | +44.7 [+33.5, +53.6] |
 
 ![Cloud robustness](../figures/m4_cloud_robustness.png)
 
@@ -92,6 +97,6 @@ Chips: India_747992, Sri-Lanka_1049830, Pakistan_849790, USA_670826. Blue = hit,
 
 | Model | Params | ms / 512×512 chip | Device |
 | :--- | :---: | :---: | :--- |
-| SAR (S1) | 24.43M | 21.6 | NVIDIA GeForce RTX 3060 Laptop GPU |
-| Optical (S2) | 24.47M | 22.4 | NVIDIA GeForce RTX 3060 Laptop GPU |
-| Fusion (S1+S2) | 24.47M | 22.2 | NVIDIA GeForce RTX 3060 Laptop GPU |
+| SAR (S1) | 24.43M | 27.7 | NVIDIA GeForce RTX 3060 Laptop GPU |
+| Optical (S2) | 24.47M | 29.0 | NVIDIA GeForce RTX 3060 Laptop GPU |
+| Fusion (S1+S2) | 24.47M | 28.7 | NVIDIA GeForce RTX 3060 Laptop GPU |

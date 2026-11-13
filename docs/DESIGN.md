@@ -132,6 +132,8 @@ Sen1Floods11 hand labels mark clouded pixels as no-data (`-1`), so the benchmark
 2. **Perfect cloud mask:** pixels with opacity ≥ 0.5 have their S2 values replaced by the train mean (i.e. 0 after normalisation). This is an upper bound on what a cloud-masking pre-processor achieves without retraining.
 3. **Cloud-augmented training** (`train.synthetic_cloud_p = 0.5`, coverage ~ U(0, 1)): models see occluded optical bands during training, so fusion can learn to fall back on SAR. Training clouds use torch's per-worker RNG and never coincide with the deterministic evaluation fields.
 
+**Outcome:** cloud-augmented fusion keeps clear-sky accuracy (82.1 vs 82.7) and beats SAR at 25–50% cover. It ties SAR at 75% and trails it at 100% (54.2 ± 12.3 vs 67.3). So the fallback to SAR is learned, but only partly and with high seed variance. For fully clouded scenes, a dedicated SAR model remains the safer choice, which is why the Kerala case study (§9) uses the SAR ensemble.
+
 ### 8.4 Real-chip stratification
 Test chips are binned by (a) a heuristic cloud proxy (B2, B3, B4 > 0.18 or B10 > 0.012) and (b) the labelled no-data fraction. The proxy agrees only moderately with the labellers' mask (P(no-data | proxy) = 0.40, P(proxy | no-data) = 0.58), so it is used for stratification only. Because clouded pixels carry no label, these bins measure performance on the *visible* part of cloudy scenes (adjacency effects, thin cloud, haze, shadow).
 

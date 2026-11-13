@@ -9,7 +9,7 @@
 > **Headline research question:**
 > *How much does Synthetic Aperture Radar (SAR), which penetrates clouds and storm cover, improve flood mapping over optical imagery, and where does each modality fail?*
 
-**Short answer.** On Sen1Floods11's labelled (largely cloud-free) pixels, optical beats SAR by 15–20 IoU points and adding SAR to optical gives no gain. Once clouds cover the optical bands, **SAR is the only input that keeps working** (67% IoU at any cloud cover, vs. 8% for optical under full cover). A standard early-fusion model **does not fall back on its SAR channels** and collapses like optical alone. In the August 2018 Kerala floods, both Sentinel-2 images of the peak (15 and 17 Aug) were 100% clouded. The SAR model mapped **314 km² of new flood water**, and on the clear pixels of an optical image taken one day later it agrees with an optical water index at 80% IoU.
+**Short answer.** On Sen1Floods11's labelled (largely cloud-free) pixels, optical beats SAR by 15–20 IoU points and adding SAR to optical gives no gain. Once clouds cover the optical bands, **SAR is the only input that keeps working** (67% IoU at any cloud cover, vs. 8% for optical under full cover). A standard early-fusion model **does not fall back on its SAR channels** and collapses like optical alone. **Training fusion with synthetic clouds fixes this:** it matches optical on clear data, beats SAR up to ~50% cloud cover, and ties it at 75%, though SAR alone stays best under total cloud. In the August 2018 Kerala floods, both Sentinel-2 images of the peak (15 and 17 Aug) were 100% clouded. The SAR model mapped **314 km² of new flood water**, and on the clear pixels of an optical image taken one day later it agrees with an optical water index at 80% IoU.
 
 ---
 
@@ -91,10 +91,13 @@ Sen1Floods11 labels clouded pixels as no-data, so the benchmark above never scor
 | Optical (S2) | 82.5 | 44.7 | 27.7 | 16.4 | 8.3 |
 | Fusion | 82.7 | 35.7 | 20.1 | 13.5 | 10.3 |
 | Fusion + perfect cloud mask (cloud → train mean) | 82.7 | 62.2 | 41.8 | 22.5 | 1.6 |
-| Fusion, trained with synthetic clouds | *pending `make cloudaug`* | | | | |
+| Optical, trained with synthetic clouds | 80.7 | 74.4 | 66.0 | 55.3 | 0.0 |
+| **Fusion, trained with synthetic clouds** | 82.1 | **78.1** | **73.0** | **67.9** | 54.2 |
 
 - **SAR overtakes optical once ~10% of the scene is clouded.** At 25% cover, SAR leads optical by 25.5 pp [17.3, 33.7].
 - **Standard fusion ignores its SAR channels when optical is corrupted.** It is *worse* than optical at partial cover (−6.1 pp at 25%). Even when it is told exactly where the cloud is, it gains only +1.6 pp over optical at 100% cover, versus 67% for SAR alone. Fusion learned on clear-sky data is an optical model with unused radar inputs.
+- **Training with synthetic clouds fixes this.** The cloud-augmented fusion model costs nothing on clear data (−0.6 pp vs standard fusion, CI [−2.3, +1.0]) and gains +42 to +55 pp under cloud. It beats SAR alone at 25% cover (+10.8 pp [5.2, 17.2]) and 50% cover (+5.8 pp [0.3, 11.8]), and ties it at 75% (+0.7 pp [−4.9, 6.2]). It is the best model at every partial cover (25–75%).
+- **SAR alone remains the right choice under full cloud.** At 100% cover the cloud-aug fusion model still trails SAR by 12.7 pp [6.9, 19.1], and it varies widely between seeds (54.2 ± 12.3). It does fall back on its radar channels (+54.6 pp over the cloud-aug optical model, which has no signal left and drops to 0%), but less reliably than a dedicated SAR model.
 - **Real cloudy scenes:** on the *visible* pixels of the cloudiest real test chips (≥30% cloud proxy), fusion beats optical by 5 pp (73.2 vs 68.2), its largest gain on real data. Elsewhere the two are within ±2 pp.
 - **Per event:** SAR is competitive only in Ghana (59.3 vs 55.6 optical) and collapses on Pakistan (32.9 vs 64.3 optical). A likely cause is smooth, dry surfaces that are radar-dark like water.
 - **Calibration:** SAR is over-confident at mid-range probabilities (reliability plot in `m4_table.md`).

@@ -44,14 +44,16 @@ def synthetic_sar_data():
     cube = np.zeros((h, w, 2), dtype=np.float32)
     label = np.zeros((h, w), dtype=np.int64)
 
+    rng = np.random.default_rng(0)
+
     # Water region: Specular reflection -> very dark VV (around -20 dB)
-    cube[:32, :, 0] = np.random.normal(-20.0, 1.0, (32, w))
-    cube[:32, :, 1] = np.random.normal(-25.0, 1.0, (32, w))
+    cube[:32, :, 0] = rng.normal(-20.0, 1.0, (32, w))
+    cube[:32, :, 1] = rng.normal(-25.0, 1.0, (32, w))
     label[:32, :] = 1
 
     # Land region: Diffuse reflection -> brighter VV (around -8 dB)
-    cube[32:, :, 0] = np.random.normal(-8.0, 1.5, (32, w))
-    cube[32:, :, 1] = np.random.normal(-14.0, 1.5, (32, w))
+    cube[32:, :, 0] = rng.normal(-8.0, 1.5, (32, w))
+    cube[32:, :, 1] = rng.normal(-14.0, 1.5, (32, w))
     label[32:, :] = 0
 
     return cube, label
@@ -107,7 +109,9 @@ def test_sar_threshold_tuning_recovers_separating_value(synthetic_sar_data):
     cube, label = synthetic_sar_data
     baseline = SARThresholdBaseline()
     tau = baseline.tune_threshold([cube], [label])
-    assert -17.0 < tau < -11.0
+    # Any threshold in the gap between the brightest water and darkest land pixel is optimal
+    gap_lo, gap_hi = cube[:32, :, 0].max(), cube[32:, :, 0].min()
+    assert gap_lo - 0.5 < tau < gap_hi + 0.5
     assert compute_sample_iou(baseline.predict(cube), label) > 0.95
 
 
