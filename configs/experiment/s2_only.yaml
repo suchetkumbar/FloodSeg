@@ -1,10 +1,5 @@
 # @package _global_
-# Experiment 2: Sentinel-2 Optical Only (13 channels)
-
-experiment_name: "exp_s2_only"
+# Experiment preset: modality = s2
 
 dataset:
   modality: "s2"
-
-train:
-  batch_size: 8

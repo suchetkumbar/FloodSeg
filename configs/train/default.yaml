@@ -1,0 +1,30 @@
+# Training loop hyperparameters (fits a 6 GB RTX 3060 laptop GPU)
+
+batch_size: 16
+num_workers: 2  # 2 keeps RAM low; loader still outpaces the GPU with the npy cache
+pin_memory: true
+amp: true  # Automatic Mixed Precision (forward FP16, loss FP32)
+
+# Optimization
+epochs: 50
+optimizer: "adamw"
+lr: 3.0e-4
+weight_decay: 1.0e-4
+grad_clip: 1.0
+
+# Learning rate scheduler (per epoch): linear warmup then cosine to min_lr
+scheduler: "cosine"
+min_lr: 1.0e-6
+warmup_epochs: 3
+
+# Loss formulation
+loss: "bce_dice"  # 'bce_dice' or 'dice_only'
+bce_weight: 0.5
+dice_weight: 0.5
+pos_weight: null  # Optional positive class weight for BCE
+
+# Early stopping & checkpointing on validation pooled water IoU
+early_stopping_patience: 12
+
+# Evaluation
+eval_batch_size: 4

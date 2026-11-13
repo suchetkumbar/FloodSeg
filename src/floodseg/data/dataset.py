@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import csv
 import logging
+import os
 from pathlib import Path
-from typing import Callable, Dict, List, Literal, Optional, Union
+from typing import Callable, Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 
@@ -61,6 +62,8 @@ class Sen1Floods11Dataset(Dataset):
         transform: Optional[Callable] = None,
         normalizer: Optional[ChannelNormalizer] = None,
         s2_band_indices: Optional[List[int]] = None,
+        cache_dir: Optional[Union[str, Path]] = None,
+        crop_size: Optional[Tuple[int, int]] = None,
     ):
         """
         Args:
@@ -70,6 +73,12 @@ class Sen1Floods11Dataset(Dataset):
             transform: Albumentations compose transform pipeline.
             normalizer: Pre-computed ChannelNormalizer (from train split only).
             s2_band_indices: Optional subset of S2 bands (0-indexed). Defaults to all 13.
+            cache_dir: Optional directory of decoded chips (``{chip_id}.npy`` = raw
+                [H, W, 15] S1+S2 stack in float16, ``{chip_id}_label.npy`` = int8 label).
+                Missing entries are written on first access. Float16 keeps ~3 significant
+                digits (<0.05% relative error), far below sensor noise, and makes data
+                loading much faster than GeoTIFF decoding.
+            crop_size: Optional (h, w) random crop applied before augmentation (training).
         """
         self.root_dir = Path(root_dir)
         self.split_file = Path(split_file)
@@ -77,6 +86,10 @@ class Sen1Floods11Dataset(Dataset):
         self.transform = transform
         self.normalizer = normalizer
         self.s2_band_indices = s2_band_indices or list(range(13))
+        self.crop_size = tuple(crop_size) if crop_size is not None else None
+        self.cache_dir = Path(cache_dir) if cache_dir is not None else None
+        if self.cache_dir is not None:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
 
         self.samples = self._load_samples()
         if len(self.samples) == 0:
@@ -162,9 +175,61 @@ class Sen1Floods11Dataset(Dataset):
             data = data[0] if data.shape[0] == 1 else data[:, :, 0]
         return data.astype(np.int64)
 
+    @staticmethod
+    def _atomic_save(path: Path, arr: np.ndarray) -> None:
+        tmp = path.with_name(f"{path.stem}.{os.getpid()}.tmp.npy")
+        np.save(tmp, arr)
+        os.replace(tmp, path)
+
+    def _cached_stack(self, idx: int) -> np.ndarray:
+        """Raw channel-first [15, H, W] S1+S2 stack (float16, memory-mapped) from cache.
+
+        GeoTIFFs are decoded and the cache entry written on a miss.
+        """
+        sample = self.samples[idx]
+        path = self.cache_dir / f"{sample['chip_id']}.npy"
+        if not path.exists():
+            stack = np.concatenate(
+                [self._read_geotiff(sample["s1_path"]), self._read_geotiff(sample["s2_path"])], axis=-1
+            )
+            self._atomic_save(path, np.ascontiguousarray(np.moveaxis(stack, -1, 0)).astype(np.float16))
+        return np.load(path, mmap_mode="r")
+
+    def _channel_indices(self) -> List[int]:
+        s2 = [2 + i for i in self.s2_band_indices]
+        return {"s1": [0, 1], "s2": s2, "fusion": [0, 1] + s2}[self.modality]
+
+    def _read_cached_window(self, idx: int, window: Optional[Tuple[int, int, int, int]]) -> np.ndarray:
+        """Read only the needed channels (and crop window) from the cache -> [h, w, C] float32."""
+        stack = self._cached_stack(idx)
+        ch = self._channel_indices()
+        if window is not None:
+            y, x, h, w = window
+            stack = stack[:, y : y + h, x : x + w]
+        if ch == list(range(ch[0], ch[-1] + 1)):
+            data = stack[ch[0] : ch[-1] + 1]
+        else:
+            data = stack[ch]
+        return np.ascontiguousarray(np.moveaxis(np.asarray(data, dtype=np.float32), 0, -1))
+
+    def get_label(self, idx: int) -> np.ndarray:
+        """Label [H, W] int64 in {-1, 0, 1} (cached if ``cache_dir`` is set)."""
+        sample = self.samples[idx]
+        if self.cache_dir is None:
+            return self._read_label(sample["label_path"])
+        path = self.cache_dir / f"{sample['chip_id']}_label.npy"
+        if path.exists():
+            return np.load(path).astype(np.int64)
+        label = self._read_label(sample["label_path"])
+        self._atomic_save(path, label.astype(np.int8))
+        return label
+
     def get_raw_image(self, idx: int) -> np.ndarray:
         """Load raw unnormalized image [H, W, C] for inspection or baselines."""
         sample = self.samples[idx]
+
+        if self.cache_dir is not None:
+            return self._read_cached_window(idx, None)
 
         if self.modality == "s1":
             # 2 bands: VV, VH (dB)
@@ -188,9 +253,24 @@ class Sen1Floods11Dataset(Dataset):
     def __getitem__(self, idx: int) -> Dict[str, Union[torch.Tensor, str]]:
         sample = self.samples[idx]
 
-        # 1. Read image and mask
-        raw_image = self.get_raw_image(idx)  # [H, W, C]
-        mask = self._read_label(sample["label_path"])  # [H, W], values in {-1, 0, 1}
+        # 1. Read image and mask. A random crop (training) is taken *before* reading
+        #    from the memory-mapped cache, so only the window's bytes hit the disk.
+        mask = self.get_label(idx)  # [H, W], values in {-1, 0, 1}
+        window = None
+        if self.crop_size is not None:
+            ch, cw = self.crop_size
+            H, W = mask.shape
+            y = int(torch.randint(0, H - ch + 1, (1,)))
+            x = int(torch.randint(0, W - cw + 1, (1,)))
+            window = (y, x, ch, cw)
+            mask = mask[y : y + ch, x : x + cw]
+        if self.cache_dir is not None:
+            raw_image = self._read_cached_window(idx, window)
+        else:
+            raw_image = self.get_raw_image(idx)
+            if window is not None:
+                y, x, ch, cw = window
+                raw_image = raw_image[y : y + ch, x : x + cw]
 
         # 2. Apply normalization (if normalizer provided)
         if self.normalizer is not None:

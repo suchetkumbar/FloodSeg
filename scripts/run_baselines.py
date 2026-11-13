@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 from pathlib import Path
 from typing import Dict, Iterator, List, Tuple
 
@@ -111,6 +112,7 @@ def main():
     table_path = results_dir / "baselines_table.md"
     table_path.write_text(md, encoding="utf-8")
     logger.info("Wrote markdown results table to %s", table_path)
+    sys.stdout.reconfigure(errors="replace")  # Windows cp1252 consoles cannot print τ
     print("\n" + md)
 
 

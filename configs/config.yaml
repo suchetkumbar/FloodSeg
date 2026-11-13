@@ -1,4 +1,6 @@
-# Primary Hydra configuration for FloodSeg
+# Primary Hydra configuration for FloodSeg.
+# Usage:  python scripts/train_model.py dataset.modality=s1 dataset.split_type=loeo seed=1337
+#         python scripts/train_model.py +experiment=s1_only
 
 defaults:
   - _self_
@@ -7,15 +9,18 @@ defaults:
   - train: default
 
 seed: 42
-experiment_name: "floodseg_default"
-output_dir: "outputs/${experiment_name}"
+deterministic: false  # true = bit-reproducible cuDNN (slower); seeds are always fixed
+experiment_name: "${dataset.split_type}_${dataset.modality}_${train.loss}_seed${seed}"
+output_dir: "outputs/runs/${experiment_name}"
 
 wandb:
   project: "floodseg"
   entity: null
-  mode: "offline"  # 'offline' or 'online'
-  tags: ["sen1floods11", "${model.name}", "${dataset.modality}"]
+  mode: "offline"  # 'online', 'offline' or 'disabled'
+  tags: ["sen1floods11", "${model.name}", "${dataset.modality}", "${dataset.split_type}"]
 
 hydra:
   run:
     dir: ${output_dir}
+  job:
+    chdir: false

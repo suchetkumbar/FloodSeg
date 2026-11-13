@@ -178,3 +178,32 @@ def test_real_downloaded_chips_integration():
     assert not torch.isnan(sample["image"]).any()
     assert not torch.isinf(sample["image"]).any()
     assert set(torch.unique(sample["mask"]).tolist()).issubset({-1, 0, 1})
+
+
+@pytest.mark.parametrize("modality", ["s1", "s2", "fusion"])
+def test_cache_and_crop_match_uncached(mock_dataset_dir, tmp_path, modality):
+    """Cached (float16, channel-first mmap) reads must match GeoTIFF reads; crops must align."""
+    root_dir, split_csv = mock_dataset_dir
+    plain = Sen1Floods11Dataset(root_dir=root_dir, split_file=split_csv, modality=modality)
+    cached = Sen1Floods11Dataset(
+        root_dir=root_dir, split_file=split_csv, modality=modality, cache_dir=tmp_path / "cache"
+    )
+    a, b = plain.get_raw_image(0), cached.get_raw_image(0)
+    assert a.shape == b.shape
+    np.testing.assert_allclose(a, b, rtol=1e-3, atol=1e-2)
+    assert np.array_equal(plain.get_label(0), cached.get_label(0))
+
+    torch.manual_seed(0)
+    cropped = Sen1Floods11Dataset(
+        root_dir=root_dir, split_file=split_csv, modality=modality,
+        cache_dir=tmp_path / "cache", crop_size=(32, 32),
+    )[0]
+    assert cropped["image"].shape[1:] == (32, 32)
+    assert cropped["mask"].shape == (32, 32)
+    # The cropped mask must be a contiguous window of the full mask.
+    full = torch.from_numpy(plain.get_label(0))
+    found = any(
+        torch.equal(full[y : y + 32, x : x + 32], cropped["mask"])
+        for y in range(33) for x in range(33)
+    )
+    assert found

@@ -1,4 +1,4 @@
-.PHONY: install lint format typecheck test data-pipeline stats baselines clean
+.PHONY: install lint format typecheck test data-pipeline stats baselines train grid aggregate clean
 
 PYTHON = ./.venv/Scripts/python.exe
 PYTEST = ./.venv/Scripts/pytest.exe
@@ -28,6 +28,15 @@ stats:
 
 baselines:
 	$(PYTHON) scripts/run_baselines.py
+
+train:
+	$(PYTHON) scripts/train_model.py
+
+grid:
+	$(PYTHON) scripts/run_m3_grid.py
+
+aggregate:
+	$(PYTHON) scripts/aggregate_m3.py
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
