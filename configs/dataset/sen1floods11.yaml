@@ -1,0 +1,33 @@
+# Sen1Floods11 dataset configuration
+
+name: "sen1floods11"
+root_dir: "data"
+modality: "fusion"  # 's1', 's2', or 'fusion'
+split_type: "official"  # 'official' or 'loeo'
+
+splits:
+  official:
+    train: "data/processed/splits/official/flood_train_data.csv"
+    val: "data/processed/splits/official/flood_val_data.csv"
+    test: "data/processed/splits/official/flood_test_data.csv"
+  loeo:
+    train: "data/processed/splits/loeo/loeo_train_data.csv"
+    val: "data/processed/splits/loeo/loeo_val_data.csv"
+    held_out_test: "data/processed/splits/loeo/loeo_held_out_test_data.csv"
+
+# Modality channel counts
+channels:
+  s1: 2
+  s2: 13
+  fusion: 15
+
+# Training input resolution
+image_size: [512, 512]
+crop_size: null  # null for full tile, or [256, 256]
+
+# Labels
+num_classes: 1
+ignore_index: -1
+
+# Normalization stats path (train split only)
+stats_path: "data/stats/train_stats_${dataset.split_type}_${dataset.modality}.json"

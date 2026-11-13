@@ -1,0 +1,35 @@
+# Training loop hyperparameters
+
+# Compute optimization (fits Kaggle T4 / RTX 3060 6GB within 3 hours)
+batch_size: 8
+num_workers: 2
+pin_memory: true
+amp: true  # Automatic Mixed Precision (torch.cuda.amp)
+
+# Optimization
+epochs: 40
+optimizer: "adamw"
+lr: 3.0e-4
+weight_decay: 1.0e-4
+
+# Learning rate scheduler
+scheduler: "cosine"
+min_lr: 1.0e-6
+warmup_epochs: 3
+
+# Loss formulation
+loss: "bce_dice"  # 'bce_dice' or 'dice_only'
+bce_weight: 0.5
+dice_weight: 0.5
+pos_weight: null  # Optional positive class weight for BCE to counter imbalance
+
+# Early stopping & Checkpointing
+early_stopping:
+  patience: 10
+  monitor: "val_iou"
+  mode: "max"
+
+checkpoint:
+  save_top_k: 1
+  monitor: "val_iou"
+  mode: "max"

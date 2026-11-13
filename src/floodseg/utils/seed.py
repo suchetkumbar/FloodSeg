@@ -1,0 +1,30 @@
+"""Deterministic seed utility for reproducible experiments across PyTorch, NumPy, and Python."""
+
+import os
+import random
+
+import numpy as np
+import torch
+
+
+def seed_everything(seed: int = 42, deterministic: bool = True) -> int:
+    """Set random seed across all libraries for deterministic execution.
+
+    Args:
+        seed: Random seed integer.
+        deterministic: If True, sets torch.backends.cudnn.deterministic = True.
+    """
+    random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+    if deterministic:
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    else:
+        torch.backends.cudnn.benchmark = True
+
+    return seed

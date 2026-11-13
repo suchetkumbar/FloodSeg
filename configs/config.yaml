@@ -1,0 +1,21 @@
+# Primary Hydra configuration for FloodSeg
+
+defaults:
+  - _self_
+  - dataset: sen1floods11
+  - model: unet_resnet34
+  - train: default
+
+seed: 42
+experiment_name: "floodseg_default"
+output_dir: "outputs/${experiment_name}"
+
+wandb:
+  project: "floodseg"
+  entity: null
+  mode: "offline"  # 'offline' or 'online'
+  tags: ["sen1floods11", "${model.name}", "${dataset.modality}"]
+
+hydra:
+  run:
+    dir: ${output_dir}

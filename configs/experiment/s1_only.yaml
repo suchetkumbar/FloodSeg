@@ -1,0 +1,10 @@
+# @package _global_
+# Experiment 1: Sentinel-1 SAR Only (VV, VH)
+
+experiment_name: "exp_s1_only"
+
+dataset:
+  modality: "s1"
+
+train:
+  batch_size: 16  # Higher batch size possible with only 2 channels

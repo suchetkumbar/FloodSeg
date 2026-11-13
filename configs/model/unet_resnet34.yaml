@@ -1,0 +1,14 @@
+# Model configuration: U-Net with ResNet-34 encoder
+
+name: "unet_resnet34"
+architecture: "unet"
+encoder_name: "resnet34"
+encoder_weights: "imagenet"  # ImageNet pretrained
+
+# Input adaptation
+in_channels: ${dataset.channels.${dataset.modality}}
+classes: ${dataset.num_classes}
+activation: null  # returns raw logits for BCEWithLogitsLoss / AMP stability
+
+# Pretrained weight expansion method for in_channels != 3
+weight_init_method: "rgb_channel_mean"  # 'rgb_channel_mean' with 3/N variance scaling
