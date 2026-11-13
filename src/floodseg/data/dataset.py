@@ -64,6 +64,7 @@ class Sen1Floods11Dataset(Dataset):
         s2_band_indices: Optional[List[int]] = None,
         cache_dir: Optional[Union[str, Path]] = None,
         crop_size: Optional[Tuple[int, int]] = None,
+        cloud_fn: Optional[Callable[[np.ndarray, str, str], np.ndarray]] = None,
     ):
         """
         Args:
@@ -79,6 +80,9 @@ class Sen1Floods11Dataset(Dataset):
                 digits (<0.05% relative error), far below sensor noise, and makes data
                 loading much faster than GeoTIFF decoding.
             crop_size: Optional (h, w) random crop applied before augmentation (training).
+            cloud_fn: Optional ``fn(raw_image, modality, chip_id) -> raw_image`` applied to
+                raw (unnormalised) values, e.g. synthetic cloud occlusion of S2 bands
+                (see floodseg.data.clouds).
         """
         self.root_dir = Path(root_dir)
         self.split_file = Path(split_file)
@@ -86,6 +90,7 @@ class Sen1Floods11Dataset(Dataset):
         self.transform = transform
         self.normalizer = normalizer
         self.s2_band_indices = s2_band_indices or list(range(13))
+        self.cloud_fn = cloud_fn
         self.crop_size = tuple(crop_size) if crop_size is not None else None
         self.cache_dir = Path(cache_dir) if cache_dir is not None else None
         if self.cache_dir is not None:
@@ -271,6 +276,9 @@ class Sen1Floods11Dataset(Dataset):
             if window is not None:
                 y, x, ch, cw = window
                 raw_image = raw_image[y : y + ch, x : x + cw]
+
+        if self.cloud_fn is not None:
+            raw_image = self.cloud_fn(raw_image, self.modality, sample["chip_id"])
 
         # 2. Apply normalization (if normalizer provided)
         if self.normalizer is not None:

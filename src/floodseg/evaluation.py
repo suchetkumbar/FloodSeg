@@ -68,10 +68,13 @@ def evaluate_model_on_split(
     num_workers: int = 0,
     amp: bool = True,
     cache_dir: Optional[Path] = None,
+    cloud_fn=None,
 ) -> Dict[str, Any]:
     """Evaluate on full 512x512 chips. Returns pooled metrics + CIs, per-event metrics,
     per-chip counts and a calibration histogram."""
-    ds = Sen1Floods11Dataset(root_dir=data_dir, split_file=split_path, modality=modality, normalizer=normalizer, cache_dir=cache_dir)
+    ds = Sen1Floods11Dataset(root_dir=data_dir, split_file=split_path, modality=modality, normalizer=normalizer, cache_dir=cache_dir,
+        cloud_fn=cloud_fn,
+    )
     if len(ds) == 0:
         return {}
     loader = DataLoader(ds, batch_size=batch_size, shuffle=False, num_workers=num_workers)

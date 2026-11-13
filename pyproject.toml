@@ -7,7 +7,7 @@ name = "floodseg"
 version = "0.1.0"
 description = "Flood water segmentation from Sentinel-1 SAR and Sentinel-2 optical satellite imagery"
 readme = "README.md"
-authors = [{ name = "FloodSeg Contributor" }]
+authors = [{ name = "FloodSeg contributors" }]
 license = { text = "MIT" }
 requires-python = ">=3.11"
 dependencies = [
@@ -27,6 +27,7 @@ dependencies = [
     "requests>=2.31.0",
     "tqdm>=4.66.0",
     "scikit-learn>=1.4.0",
+    "scipy>=1.11.0",
 ]
 
 [project.optional-dependencies]
@@ -37,6 +38,13 @@ dev = [
     "mypy>=1.9.0",
     "ipykernel>=6.29.0",
     "ipywidgets>=8.1.0",
+]
+
+# Milestone 5 case study: Planetary Computer STAC access and the interactive map
+casestudy = [
+    "pystac-client>=0.7.0",
+    "planetary-computer>=1.0.0",
+    "folium>=0.15.0",
 ]
 
 [project.scripts]

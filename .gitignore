@@ -65,4 +65,7 @@ htmlcov/
 # Outputs / Logs (keep small, versioned result tables)
 outputs/*
 !outputs/results/
+!outputs/figures/
+!outputs/kerala/
+outputs/kerala/*_prob.tif
 logs/

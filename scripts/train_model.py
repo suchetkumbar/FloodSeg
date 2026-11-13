@@ -26,6 +26,7 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader
 
+from floodseg.data.clouds import RandomCloudAugmentation
 from floodseg.data.dataset import Sen1Floods11Dataset
 from floodseg.data.normalizer import ChannelNormalizer
 from floodseg.data.splits import get_split_paths, get_stats_path
@@ -38,6 +39,9 @@ from floodseg.utils.logging import setup_wandb
 from floodseg.utils.seed import seed_everything
 
 logger = logging.getLogger("Train")
+
+if not OmegaConf.has_resolver("variant_suffix"):
+    OmegaConf.register_new_resolver("variant_suffix", lambda v: "" if v == "standard" else f"_{v}")
 
 
 def _strip_heavy(res: dict) -> dict:
@@ -68,6 +72,10 @@ def main(cfg: DictConfig) -> dict:
     train_ds = Sen1Floods11Dataset(
         data_dir, splits["train"], modality, transform=get_train_transforms(),
         normalizer=normalizer, cache_dir=cache, crop_size=crop,
+        cloud_fn=(
+            RandomCloudAugmentation(tc.synthetic_cloud_p, tc.synthetic_cloud_max_coverage)
+            if tc.synthetic_cloud_p > 0 else None
+        ),
     )
     val_ds = Sen1Floods11Dataset(data_dir, splits["val"], modality, normalizer=normalizer, cache_dir=cache)
 
@@ -161,6 +169,8 @@ def main(cfg: DictConfig) -> dict:
         "split_type": split_type,
         "seed": cfg.seed,
         "loss": tc.loss,
+        "variant": cfg.variant,
+        "synthetic_cloud_p": tc.synthetic_cloud_p,
         "num_params": n_params,
         "best_epoch": history["best_epoch"],
         "epochs_run": len(history["epochs"]),

@@ -1,4 +1,4 @@
-.PHONY: install lint format typecheck test data-pipeline stats baselines train grid aggregate clean
+.PHONY: install lint format typecheck test data-pipeline stats baselines train grid aggregate cloudaug m4 kerala clean
 
 PYTHON = ./.venv/Scripts/python.exe
 PYTEST = ./.venv/Scripts/pytest.exe
@@ -37,6 +37,15 @@ grid:
 
 aggregate:
 	$(PYTHON) scripts/aggregate_m3.py
+
+cloudaug:
+	$(PYTHON) scripts/run_m3_grid.py --grid cloudaug
+
+m4:
+	$(PYTHON) scripts/run_m4_analysis.py
+
+kerala:
+	$(PYTHON) scripts/kerala_case_study.py
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +

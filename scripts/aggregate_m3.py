@@ -87,7 +87,10 @@ def main():
         return
     groups: Dict[tuple, List[Dict]] = defaultdict(list)
     for r in runs:
-        groups[(r["split_type"], r["modality"], r["loss"])].append(r)
+        # Non-standard variants (e.g. cloud-augmented M4 runs) are reported by
+        # scripts/run_m4_analysis.py, not in the M3 tables.
+        if r.get("variant", "standard") == "standard":
+            groups[(r["split_type"], r["modality"], r["loss"])].append(r)
 
     configs = {}
     for (split, mod, loss), rs in sorted(groups.items()):

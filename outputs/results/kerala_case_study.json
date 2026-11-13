@@ -1,0 +1,93 @@
+{
+  "aoi_bbox_lonlat": [
+    76.28,
+    9.28,
+    76.58,
+    9.62
+  ],
+  "grid": {
+    "crs": "EPSG:4326",
+    "res_deg": 8.983152841195215e-05,
+    "width": 3340,
+    "height": 3785
+  },
+  "s1_flood_items": [
+    "S1A_IW_GRDH_1SDV_20180821T004109_20180821T004134_023337_0289D5_rtc",
+    "S1A_IW_GRDH_1SDV_20180821T004044_20180821T004109_023337_0289D5_rtc"
+  ],
+  "s1_reference_items": [
+    "S1A_IW_GRDH_1SDV_20180222T004101_20180222T004126_020712_0237C5_rtc",
+    "S1A_IW_GRDH_1SDV_20180222T004036_20180222T004101_020712_0237C5_rtc",
+    "S1A_IW_GRDH_1SDV_20180306T004101_20180306T004126_020887_023D4A_rtc",
+    "S1A_IW_GRDH_1SDV_20180306T004036_20180306T004101_020887_023D4A_rtc",
+    "S1A_IW_GRDH_1SDV_20180318T004101_20180318T004126_021062_0242D9_rtc",
+    "S1A_IW_GRDH_1SDV_20180318T004036_20180318T004101_021062_0242D9_rtc"
+  ],
+  "models": [
+    "outputs\\runs\\official_s1_bce_dice_seed42\\best_model.pt",
+    "outputs\\runs\\official_s1_bce_dice_seed1337\\best_model.pt",
+    "outputs\\runs\\official_s1_bce_dice_seed2024\\best_model.pt"
+  ],
+  "valid_area_km2": 1238.6852921006666,
+  "water_on_flood_date_km2": 640.5401035460451,
+  "reference_water_km2": 355.73095847769525,
+  "reference_water_sar_only_km2": 253.02813393034353,
+  "worldcover_permanent_water_km2": 344.5944298879406,
+  "flooded_area_without_worldcover_mask_km2": 399.72463857034796,
+  "worldcover_item": "ESA_WorldCover_10m_2021_v200_N09E075",
+  "flooded_area_km2": 314.08184336675083,
+  "flooded_fraction_of_aoi": 0.25355338594257215,
+  "domain_check": {
+    "train_mean_db": [
+      -10.392862319946289,
+      -17.24110221862793
+    ],
+    "train_std_db": [
+      4.038801193237305,
+      4.753971099853516
+    ],
+    "kerala_flood_mean_db": [
+      -12.66299819946289,
+      -18.023181915283203
+    ],
+    "kerala_flood_std_db": [
+      7.122766971588135,
+      5.56525182723999
+    ],
+    "kerala_ref_mean_db": [
+      -11.517302513122559,
+      -16.77016258239746
+    ]
+  },
+  "optical_cross_check": {
+    "s2_item": "S2B_MSIL2A_20180822T050649_R019_T43PFL_20201011T052858",
+    "s2_tile_cloud_cover_pct": 31.293705,
+    "aoi_clear_fraction": 0.7165438764437522,
+    "vs_mndwi": {
+      "iou": 0.7987828558819879,
+      "frac_sar_water_confirmed": 0.8408339361084394,
+      "frac_optical_water_detected": 0.941079745209709,
+      "pixel_agreement": 0.8951013339344653,
+      "valid_pixels": 9058466
+    },
+    "vs_scl_water": {
+      "iou": 0.7862876429627121,
+      "frac_sar_water_confirmed": 0.8252476764830775,
+      "frac_optical_water_detected": 0.9433590435493858,
+      "pixel_agreement": 0.888914856003213,
+      "valid_pixels": 9058466
+    }
+  },
+  "s2_flood_week_scenes": [
+    {
+      "id": "S2A_MSIL2A_20180817T050651_R019_T43PFL_20201011T025130",
+      "date": "2018-08-17",
+      "cloud_cover_pct": 100.0
+    },
+    {
+      "id": "S2B_MSIL2A_20180815T051649_R062_T43PFL_20201011T021102",
+      "date": "2018-08-15",
+      "cloud_cover_pct": 100.0
+    }
+  ]
+}

@@ -10,7 +10,8 @@ defaults:
 
 seed: 42
 deterministic: false  # true = bit-reproducible cuDNN (slower); seeds are always fixed
-experiment_name: "${dataset.split_type}_${dataset.modality}_${train.loss}_seed${seed}"
+variant: "standard"  # free-form tag, e.g. "cloudaug"; non-standard variants get a name suffix
+experiment_name: "${dataset.split_type}_${dataset.modality}_${train.loss}${variant_suffix:${variant}}_seed${seed}"
 output_dir: "outputs/runs/${experiment_name}"
 
 wandb:

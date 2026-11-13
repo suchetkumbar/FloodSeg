@@ -10,6 +10,7 @@ Seed 42 runs go first, so a partial grid already covers every configuration.
 
     python scripts/run_m3_grid.py            # run all + aggregate
     python scripts/run_m3_grid.py --dry-run  # list runs
+    python scripts/run_m3_grid.py --grid cloudaug   # M4: 6 cloud-augmented runs + M4 analysis
 """
 
 from __future__ import annotations
@@ -35,17 +36,29 @@ def grid():
                 yield {"dataset.split_type": "official", "dataset.modality": mod, "seed": seed, "train.loss": "dice_only"}
 
 
+def cloudaug_grid():
+    """Milestone 4: S2 and fusion trained with synthetic-cloud augmentation (official, 3 seeds)."""
+    for seed in SEEDS:
+        for mod in ("s2", "fusion"):
+            yield {
+                "dataset.split_type": "official", "dataset.modality": mod, "seed": seed,
+                "train.loss": "bce_dice", "variant": "cloudaug", "train.synthetic_cloud_p": 0.5,
+            }
+
+
 def run_name(o) -> str:
-    return f"{o['dataset.split_type']}_{o['dataset.modality']}_{o['train.loss']}_seed{o['seed']}"
+    suffix = "" if o.get("variant", "standard") == "standard" else f"_{o['variant']}"
+    return f"{o['dataset.split_type']}_{o['dataset.modality']}_{o['train.loss']}{suffix}_seed{o['seed']}"
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--grid", choices=["m3", "cloudaug"], default="m3")
     ap.add_argument("--wandb-mode", default="disabled", help="offline/online to also log to W&B")
     args = ap.parse_args()
 
-    runs = list(grid())
+    runs = list(grid() if args.grid == "m3" else cloudaug_grid())
     for i, o in enumerate(runs, 1):
         name = run_name(o)
         done = (Path("outputs/runs") / name / "summary.json").exists()
@@ -62,6 +75,8 @@ def main():
 
     if not args.dry_run:
         subprocess.call([sys.executable, "scripts/aggregate_m3.py"])
+        if args.grid == "cloudaug":
+            subprocess.call([sys.executable, "scripts/run_m4_analysis.py"])
 
 
 if __name__ == "__main__":

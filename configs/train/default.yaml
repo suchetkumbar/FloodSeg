@@ -28,3 +28,7 @@ early_stopping_patience: 12
 
 # Evaluation
 eval_batch_size: 4
+
+# Synthetic-cloud augmentation of S2 bands (Milestone 4). 0 disables it.
+synthetic_cloud_p: 0.0
+synthetic_cloud_max_coverage: 1.0

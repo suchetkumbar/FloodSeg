@@ -33,6 +33,21 @@ def main():
         "--split", type=str, default="all", choices=["official", "loeo", "all"]
     )
 
+    # Predict command
+    pred_parser = subparsers.add_parser(
+        "predict", help="Predict flood water for a scene (sliding window) -> GeoTIFFs"
+    )
+    pred_parser.add_argument(
+        "--checkpoint", type=Path, nargs="+", required=True,
+        help="One or more best_model.pt files of the same modality (averaged as an ensemble)",
+    )
+    pred_parser.add_argument("--s1", type=Path, default=None, help="2-band VV/VH GeoTIFF in dB")
+    pred_parser.add_argument("--s2", type=Path, default=None, help="13-band S2 L1C TOA x 1e4 GeoTIFF")
+    pred_parser.add_argument("--out", type=Path, required=True, help="Output prefix, e.g. outputs/scene")
+    pred_parser.add_argument("--threshold", type=float, default=0.5)
+    pred_parser.add_argument("--tile", type=int, default=512)
+    pred_parser.add_argument("--overlap", type=int, default=128)
+
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -46,6 +61,13 @@ def main():
 
         for split_type in SPLIT_TYPES if args.split == "all" else (args.split,):
             compute_split_stats(args.data_dir, split_type)
+    elif args.command == "predict":
+        from floodseg.predict import predict_scene
+
+        predict_scene(
+            args.checkpoint, args.s1, args.s2, args.out,
+            threshold=args.threshold, tile=args.tile, overlap=args.overlap,
+        )
     else:
         parser.print_help()
         sys.exit(0)

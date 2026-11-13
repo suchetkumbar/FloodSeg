@@ -76,3 +76,24 @@ def test_evaluate_model_on_split_per_event(tmp_path: Path):
     assert set(res["per_event"]) == {"India", "Bolivia"}
     assert res["per_event"]["India"]["num_chips"] == 2
     assert res["per_chip"]["Bolivia_1"]["iou"] == pytest.approx(1.0)
+
+
+def test_predict_tiled_matches_single_tile_and_handles_odd_sizes():
+    from floodseg.data.normalizer import ChannelNormalizer
+    from floodseg.inference import predict_tiled
+
+    class Px(torch.nn.Module):  # per-pixel model: tiling must not change its output
+        def __init__(self):
+            super().__init__()
+            self.w = torch.nn.Parameter(torch.ones(1))
+
+        def forward(self, x):
+            return x[:, :1] * self.w
+
+    norm = ChannelNormalizer([0.0, 0.0], [1.0, 1.0])
+    img = np.random.default_rng(0).normal(0, 1, (700, 900, 2)).astype(np.float32)
+    prob = predict_tiled(Px(), img, norm, tile=256, overlap=64, device=torch.device("cpu"))
+    assert prob.shape == (700, 900)
+    np.testing.assert_allclose(prob, 1 / (1 + np.exp(-img[..., 0])), atol=1e-4)
+    small = predict_tiled(Px(), img[:100, :120], norm, tile=256, overlap=64, device=torch.device("cpu"))
+    assert small.shape == (100, 120)
