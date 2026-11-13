@@ -33,7 +33,6 @@ ENV/
 env/
 
 # Data and Models
-docs/
 data/raw/
 data/cache/
 data/processed/sen1floods11/
